@@ -1,28 +1,27 @@
-const express = require('express');
-const axios = require('axios');
+const express = require("express");
+const axios = require("axios");
 const app = express();
-require('dotenv').config();
+require("dotenv").config();
 
-app.use(express.static('public', { index: 'home.html' }));
+app.use(express.static("public", { index: "home.html" }));
 
-
-let accessToken = '';
-let customerId = '';
+let accessToken = "";
+let customerId = "";
 
 // Get access token
-app.get('/getAccessToken', async (req, res) => {
+app.get("/getAccessToken", async (req, res) => {
   try {
     const response = await axios.post(
-      'https://api.finicity.com/aggregation/v2/partners/authentication',
+      "https://api.finicity.com/aggregation/v2/partners/authentication",
       {
         partnerId: process.env.partnerId,
         partnerSecret: process.env.partnerSecret,
       },
       {
         headers: {
-          'Content-Type': 'application/json',
-          'Finicity-App-Key': process.env.appKey,
-          Accept: 'application/json',
+          "Content-Type": "application/json",
+          "Finicity-App-Key": process.env.appKey,
+          Accept: "application/json",
         },
       }
     );
@@ -31,30 +30,28 @@ app.get('/getAccessToken', async (req, res) => {
 
     res.send(accessToken);
   } catch (error) {
-    console.error('Error getting access token:', error);
-    res.status(500).send('Error getting access token');
+    console.error("Error getting access token:", error);
+    res.status(500).send("Error getting access token");
   }
 });
 
-
-
 // Get customer ID
-app.get('/getCustomerId', async (req, res) => {
+app.get("/getCustomerId", async (req, res) => {
   //const { username } = req.query;
   const username = req.query.name;
-  
+
   try {
     const response = await axios.post(
-      'https://api.finicity.com/aggregation/v2/customers/testing',
+      "https://api.finicity.com/aggregation/v2/customers/testing",
       {
         username: username,
       },
       {
         headers: {
-          'Content-Type': 'application/json',
-          'Finicity-App-Key': process.env.appKey,
-          'Finicity-App-Token': accessToken,
-          Accept: 'application/json',
+          "Content-Type": "application/json",
+          "Finicity-App-Key": process.env.appKey,
+          "Finicity-App-Token": accessToken,
+          Accept: "application/json",
         },
       }
     );
@@ -64,23 +61,39 @@ app.get('/getCustomerId', async (req, res) => {
     uniqueUserName = response.data.username;
     res.send(customerId);
   } catch (error) {
-    console.error('Error creating test user:', error);
-    res.status(500).send('Error creating test user');
+    console.error("Error creating test user:", error);
+    res.status(500).send("Error creating test user");
   }
 });
 
+app.get("/getConnectLink", async (req, res) => {
+  console.log(customerId);
+  try {
+    const response = await axios.post(
+      "https://api.finicity.com/connect/v2/generate",
+      {
+        partnerId: process.env.partnerId,
+        customerId: customerId,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Finicity-App-Key": process.env.appKey,
+          "Finicity-App-Token": accessToken,
+          Accept: "application/json",
+        },
+      }
+    );
 
+    connectLink = response.data.link;
+    console.log(connectLink);
 
-
-
-
-
-
-
-
-
-
-
+    res.send(connectLink);
+  } catch (error) {
+    console.error("Error getting connect link:", error);
+    res.status(500).send("Error getting connect link:", error);
+  }
+});
 
 // Start the server
 const port = 3000;
